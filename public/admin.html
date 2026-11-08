@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Admin — Jeu de survie</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;background:#101810;color:#fff;font-family:system-ui,sans-serif;display:flex;justify-content:center;padding:20px}
+.card{background:rgba(20,30,20,.95);border:1px solid #3a553a;border-radius:14px;padding:20px 26px;width:100%;max-width:780px}
+.btn{display:inline-block;background:#3d9a3d;border-radius:8px;padding:9px 16px;cursor:pointer}
+input{padding:10px 12px;font-size:16px;border-radius:8px;border:1px solid #888;background:#0d130d;color:#fff;width:100%;box-sizing:border-box;margin:4px 0 10px}
+.ab{background:#34523a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer}
+.ab:hover{border-color:#ffd24a}.ab.on{background:#3d9a3d;border-color:#9f9}
+.abox{display:flex;flex-wrap:wrap;gap:6px}
+h3{margin:12px 0 6px;font-size:15px;opacity:.9}
+#st{min-height:20px;margin:8px 0;color:#ffd24a}
+#panel{display:none}
+</style></head><body><div class="card">
+<h1 style="font-size:26px;margin:0 0 10px">🛡️ Admin à distance</h1>
+<label>Adresse du jeu</label><input id="url" value="survie.html">
+<label>Code admin</label><input id="code" type="password" autocomplete="off" placeholder="Code">
+<div><span class="btn" id="open">Ouvrir le jeu</span> <span class="btn" id="test" style="background:#555">Tester le code</span></div>
+<div id="st">Clique sur « Ouvrir le jeu », puis clique dans le jeu pour jouer. Garde cette page ouverte à côté.</div>
+<div id="panel">
+
+  <h3>📦 Ressources et objets</h3>
+  <div class="abox">
+    <button class="ab" data-a="wood">+50 bois</button><button class="ab" data-a="stone">+50 pierre</button><button class="ab" data-a="iron">+20 fer</button><button class="ab" data-a="berry">+20 baies</button>
+    <button class="ab" data-a="all">Tout +100</button><button class="ab" data-a="items">Tous les objets ×5</button><button class="ab" data-a="irontools">Outils de fer</button><button class="ab" data-a="clearbag">Vider le sac</button>
+  </div>
+  <h3>❤️ Joueur</h3>
+  <div class="abox">
+    <button class="ab" data-t="god">Mode dieu</button><button class="ab" data-t="stam">Endurance infinie</button><button class="ab" data-t="superJump">Super saut</button><button class="ab" data-t="superSpeed">Super vitesse</button><button class="ab" data-a="heal">Remplir les jauges</button>
+  </div>
+  <h3>🕒 Temps et déplacement</h3>
+  <div class="abox">
+    <button class="ab" data-a="dawn">Aube</button><button class="ab" data-a="noon">Midi</button><button class="ab" data-a="dusk">Soir</button><button class="ab" data-a="midnight">Minuit</button><button class="ab" data-t="freeze">Arrêter le temps</button>
+    <button class="ab" data-t="fly">Vol (Espace monte, Maj descend)</button>
+  </div>
+  <div class="abox" style="margin-top:6px">
+    <button class="ab" data-a="tpstart">→ Départ</button><button class="ab" data-a="tppond">→ Étang</button><button class="ab" data-a="tpbed">→ Lit</button><button class="ab" data-a="tpcenter">→ Centre</button><button class="ab" data-a="tphigh">→ Haut dans le ciel</button>
+  </div>
+  <h3>🌍 Monde</h3>
+  <div class="abox">
+    <button class="ab" data-a="regrow">Tout faire repousser</button><button class="ab" data-a="clearplaced">Retirer les objets posés</button>
+    <button class="ab" data-s="0.5">Vitesse ×0.5</button><button class="ab" data-s="1">×1</button><button class="ab" data-s="2">×2</button><button class="ab" data-s="4">×4</button>
+  </div>
+  <div class="abox" style="margin-top:14px;justify-content:center">
+    
+  </div>
+
+
+</div></div>
+<script>
+let win=null;
+const $=id=>document.getElementById(id);
+function say(t){$('st').textContent=t}
+$('open').onclick=()=>{ win=window.open($('url').value,'survieGame'); say(win?'Jeu ouvert. Entre le code puis « Tester le code ».':'Fenêtre bloquée: autorise les popups pour cette page.'); };
+function send(o){
+  if(!win||win.closed){say('Ouvre d\'abord le jeu (bouton « Ouvrir le jeu »).');return;}
+  win.postMessage(Object.assign({type:'survie-admin',code:$('code').value},o),'*');
+}
+$('test').onclick=()=>send({});
+addEventListener('message',e=>{
+  const d=e.data; if(!d||d.type!=='survie-admin-reply')return;
+  say(d.ok?'✅ Connecté au jeu':'❌ '+d.msg);
+  $('panel').style.display=d.ok?'block':'none';
+  if(d.ok&&d.adm){
+    document.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',!!d.adm[b.dataset.t]));
+    document.querySelectorAll('[data-s]').forEach(b=>b.classList.toggle('on',d.adm.speed===+b.dataset.s));
+  }
+});
+$('panel').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a],[data-t],[data-s]'); if(!b)return;
+  send(b.dataset.t?{t:b.dataset.t}:b.dataset.s?{s:b.dataset.s}:{a:b.dataset.a});
+});
+</script></body></html>
